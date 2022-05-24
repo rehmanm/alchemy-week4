@@ -11,3 +11,5 @@ Deploy on Netlify
 ```
 netlify init
 ```
+
+[Deployed Url](https://nft-gallery-rehmanm.netlify.app/)
