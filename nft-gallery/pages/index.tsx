@@ -5,26 +5,55 @@ const Home: NextPage = () => {
   const [wallet, setWalletAddress] = useState<string>('')
   const [collection, setCollectionAddress] = useState<string>('')
   const [NFTs, setNFTs] = useState([])
+  const [fetchForCollection, setFetchForCollection] = useState<boolean>(false)
 
   const fetchNfts = async () => {
     let nfts
     console.log('fetching nfts')
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
+    console.log(apiKey)
+    const baseURL = `https://eth-mainnet.alchemyapi.io/v2/${apiKey}/getNFTs/`
+
+    let requestOption = {
+      method: 'GET',
+    }
+
     if (!collection.length) {
-      var requestOption = {
-        method: 'GET',
-      }
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
-      console.log(apiKey)
-      const baseURL = `https://eth-mainnet.alchemyapi.io/v2/${apiKey}/getNFTs/`
       const fetchURL = `${baseURL}?owner=${wallet}`
 
       nfts = await fetch(fetchURL, requestOption).then((data) => data.json())
     } else {
+      const fetchURL = `${baseURL}?owner=${wallet}&contractAddresses[]=${collection}`
+
+      nfts = await fetch(fetchURL, requestOption).then((data) => data.json())
     }
 
     if (nfts) {
       console.log(nfts)
-      setNFTs(nfts)
+      setNFTs(nfts.ownedNfts)
+    }
+  }
+
+  const fetchNftsForCollection = async () => {
+    if (collection.length) {
+      console.log('fetching nfts')
+      const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
+      console.log(apiKey)
+      const baseURL = `https://eth-mainnet.alchemyapi.io/v2/${apiKey}/getNFTsForCollection`
+
+      let requestOption = {
+        method: 'GET',
+      }
+
+      const fetchURL = `${baseURL}?contractAddress=${collection}&withMetadata=${'true'}`
+
+      let nfts = await fetch(fetchURL, requestOption).then((data) =>
+        data.json()
+      )
+      if (nfts) {
+        console.log(nfts)
+        setNFTs(nfts.nfts)
+      }
     }
   }
 
@@ -44,11 +73,20 @@ const Home: NextPage = () => {
           onChange={(e) => setCollectionAddress(e.target.value)}
         />
         <label>
-          <input type="checkbox" />
+          <input
+            type="checkbox"
+            checked={fetchForCollection}
+            onChange={(e) => setFetchForCollection(e.target.checked)}
+          />
+          Fetch for Collection
         </label>
         <button
           onClick={() => {
-            fetchNfts()
+            if (fetchForCollection) {
+              fetchNftsForCollection()
+            } else {
+              fetchNfts()
+            }
           }}
         >
           Let's go!
