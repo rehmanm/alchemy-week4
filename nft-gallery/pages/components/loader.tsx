@@ -4,7 +4,7 @@ export interface ILoaderProps {
   loading: boolean
 }
 
-export function Loader(props: ILoaderProps) {
+const Loader = (props: ILoaderProps) => {
   return (
     <div>
       {props.loading && (
@@ -15,3 +15,5 @@ export function Loader(props: ILoaderProps) {
     </div>
   )
 }
+
+export default Loader

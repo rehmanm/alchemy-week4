@@ -2,8 +2,8 @@ import type { NextPage } from 'next'
 import { useState } from 'react';
 
 import { Nft } from '../models/nft';
-import { Loader } from './components/loader';
-import { NFTCard } from './components/nftCard';
+import Loader from './components/loader';
+import NFTCard from './components/nftCard';
 
 const Home: NextPage = () => {
   const [wallet, setWalletAddress] = useState<string>('')
