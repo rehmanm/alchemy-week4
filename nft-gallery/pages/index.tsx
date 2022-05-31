@@ -11,8 +11,30 @@ const Home: NextPage = () => {
   const [NFTs, setNFTs] = useState<Nft[]>([])
   const [fetchForCollection, setFetchForCollection] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
+  const [showWalletAddressRequired, setShowWalletAddressRequired] =
+    useState(false)
 
-  const fetchNfts = async () => {
+  const [pages, setPages] = useState<number[]>([])
+
+  const getPagesArrays = (itemLength: number) => {
+    console.log('itemLength', itemLength)
+    let totalItem = itemLength
+    let pageArray: number[] = []
+    let currentPage = 1
+    while (totalItem > 100) {
+      pageArray.push(currentPage++)
+      totalItem = totalItem - 100
+    }
+    pageArray.push(currentPage)
+    console.log('pageArray', pageArray)
+    return pageArray
+  }
+
+  const fetchNfts = async (currentPage: number) => {
+    if (!wallet && !fetchForCollection) {
+      setShowWalletAddressRequired(true)
+      return
+    }
     let nfts
     console.log('fetching nfts')
     const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
@@ -22,17 +44,14 @@ const Home: NextPage = () => {
     let requestOption = {
       method: 'GET',
     }
+    let fetchURL
     setLoading(true)
     if (!collection.length) {
-      const fetchURL = `${baseURL}?owner=${wallet}`
-
-      nfts = await fetch(fetchURL, requestOption)
-        .then((data) => data.json())
-        .catch((err) => {
-          setLoading(false)
-        })
+      fetchURL = `${baseURL}?owner=${wallet}&startToken=${currentPage * 100}`
     } else {
-      const fetchURL = `${baseURL}?owner=${wallet}&contractAddresses[]=${collection}`
+      fetchURL = `${baseURL}?owner=${wallet}&contractAddresses[]=${collection}&startToken=${
+        currentPage * 100
+      }`
 
       nfts = await fetch(fetchURL, requestOption)
         .then((data) => data.json())
@@ -40,15 +59,22 @@ const Home: NextPage = () => {
           setLoading(false)
         })
     }
+    console.log(fetchURL)
+    nfts = await fetch(fetchURL, requestOption)
+      .then((data) => data.json())
+      .catch((err) => {
+        setLoading(false)
+      })
 
     if (nfts) {
-      console.log(nfts)
+      console.log('nft', nfts)
       setNFTs(nfts.ownedNfts)
+      setPages(getPagesArrays(nfts.totalCount))
     }
     setLoading(false)
   }
 
-  const fetchNftsForCollection = async () => {
+  const fetchNftsForCollection = async (currentPage: number) => {
     if (collection.length) {
       console.log('fetching nfts')
       const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
@@ -59,7 +85,9 @@ const Home: NextPage = () => {
         method: 'GET',
       }
       setLoading(true)
-      const fetchURL = `${baseURL}?contractAddress=${collection}&withMetadata=${'true'}`
+      const fetchURL = `${baseURL}?contractAddress=${collection}&withMetadata=${'true'}&startToken=${
+        currentPage * 100
+      }`
 
       let nfts = await fetch(fetchURL, requestOption)
         .then((data) => data.json())
@@ -69,8 +97,17 @@ const Home: NextPage = () => {
       if (nfts) {
         console.log(nfts)
         setNFTs(nfts.nfts)
+        setPages(getPagesArrays(nfts.totalCount))
       }
       setLoading(false)
+    }
+  }
+
+  const getData = (page: number) => {
+    if (fetchForCollection) {
+      fetchNftsForCollection(page)
+    } else {
+      fetchNfts(page)
     }
   }
 
@@ -84,6 +121,17 @@ const Home: NextPage = () => {
           className="w-2/5 rounded-lg bg-slate-100 py-2 px-2 text-gray-800 focus:outline-blue-300 disabled:bg-slate-50 disabled:text-gray-50"
           onChange={(e) => setWalletAddress(e.target.value)}
         ></input>
+        {showWalletAddressRequired && (
+          <div
+            className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-800 "
+            role="alert"
+          >
+            <strong className="font-bold">Error</strong>
+            <span className="ml-5 block sm:inline ">
+              Please provide wallet address
+            </span>
+          </div>
+        )}
         <input
           type={'text'}
           placeholder="Add the collection address"
@@ -105,16 +153,34 @@ const Home: NextPage = () => {
             'mt-3 w-1/5 rounded-sm bg-blue-400 px-4 py-2 text-white disabled:bg-slate-500'
           }
           onClick={() => {
-            if (fetchForCollection) {
-              fetchNftsForCollection()
-            } else {
-              fetchNfts()
-            }
+            setShowWalletAddressRequired(false)
+
+            getData(0)
           }}
         >
           Let's go!
         </button>
       </div>
+      <div>
+        {pages.length > 0
+          ? pages.map((p) => {
+              return (
+                <span className="ml-5 block sm:inline">
+                  <a
+                    href="#"
+                    onClick={() => {
+                      getData(p - 1)
+                    }}
+                  >
+                    {' '}
+                    {p}
+                  </a>
+                </span>
+              )
+            })
+          : ''}
+      </div>
+
       <div className="mt-4 flex w-5/6 flex-wrap justify-center gap-y-12 gap-x-12">
         {NFTs.length > 0
           ? NFTs.map((nft) => {

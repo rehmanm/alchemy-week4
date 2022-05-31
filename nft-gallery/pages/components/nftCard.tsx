@@ -22,12 +22,22 @@ const NFTCard = (props: INFTCardProps) => {
             Id:{' '}
             {props.nft?.id.tokenId.substring(props.nft?.id.tokenId.length - 4)}
           </p>
-          <p className="text-gray-600">{`${props.nft?.contract.address.substring(
-            0,
-            4
-          )}...${props.nft?.contract.address.substring(
-            props.nft?.contract.address.length - 4
-          )}`}</p>
+          <p className=" text-gray-600">
+            {`${props.nft?.contract.address.substring(
+              0,
+              4
+            )}...${props.nft?.contract.address.substring(
+              props.nft?.contract.address.length - 4
+            )}`}{' '}
+            <button
+              className="align-middle"
+              onClick={() =>
+                navigator.clipboard.writeText(props.nft?.contract.address)
+              }
+            >
+              <img src="https://img.icons8.com/small/16/000000/copy.png" />
+            </button>
+          </p>
         </div>
       </div>
     </div>
