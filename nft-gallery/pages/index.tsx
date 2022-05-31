@@ -17,17 +17,19 @@ const Home: NextPage = () => {
   const [pages, setPages] = useState<number[]>([])
 
   const getPagesArrays = (itemLength: number) => {
-    console.log('itemLength', itemLength)
-    let totalItem = itemLength
-    let pageArray: number[] = []
-    let currentPage = 1
-    while (totalItem > 100) {
-      pageArray.push(currentPage++)
-      totalItem = totalItem - 100
+    if (itemLength && itemLength > 100) {
+      let totalItem = itemLength
+      let pageArray: number[] = []
+      let currentPage = 1
+      while (totalItem > 100) {
+        pageArray.push(currentPage++)
+        totalItem = totalItem - 100
+      }
+      pageArray.push(currentPage)
+      console.log('pageArray', pageArray)
+      return pageArray
     }
-    pageArray.push(currentPage)
-    console.log('pageArray', pageArray)
-    return pageArray
+    return []
   }
 
   const fetchNfts = async (currentPage: number) => {
